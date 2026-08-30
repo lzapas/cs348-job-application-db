@@ -23,23 +23,10 @@ The Job Application Tracker helps job seekers organize their applications, track
 ## Features
 
 ### Phase 2 (Coming Soon)
-- **Application Management** (CRUD)
-  - Add, edit, and delete job applications
-  - Track company, job title, salary, status, and application date
-  - Manage multiple recruiter contacts per application
-  
-- **Analytics Dashboard**
-  - Filter applications by status, date range, and company
-  - View statistics including:
-    - Average time to interview
-    - Application success rate by company
-    - Distribution of application statuses
-    - Salary trends
+
 
 ### Phase 3 (Coming Soon)
-- GCP Cloud SQL migration
-- Advanced reporting with time-series analysis
-- Export reports to CSV
+
 
 ## Tech Stack
 
