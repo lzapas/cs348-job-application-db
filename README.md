@@ -71,22 +71,14 @@ python app.py
 
 http://localhost:5000
 
-
-
-## Screenshots
-
-### Hello World Page
-![Hello World Page](screenshots/hello-world.png)
-
-
 ## Phase 1 Deliverables
 
 | Requirement | Status |
 |-------------|--------|
 | Programming language/framework installed | Complete |
-| Hello World page developed | Complete |
-| Demo video recorded (1-2 minutes) | Complete |
-| Submitted to Brightspace | Complete |
+| Hello World page developed | In progress |
+| Demo video recorded (1-2 minutes) | Not Started |
+| Submitted to Brightspace | Not Started |
 
 
 ## Demo Video Notes
@@ -119,7 +111,7 @@ The Phase 1 demo video demonstrates:
 
 ## Author
 
-Your Name
+Lukas Zapasnikas
 - Purdue University, Computer Science
 - CS348 - Database Systems
 - Fall 2026
