@@ -1,57 +1,133 @@
 # Job Application Tracker
 
-A full-stack web application for tracking job applications, managing recruiter contacts, and generating analytics reports. Built for CS348 - Database Systems at Purdue University.
+A Flask-based web application for tracking job applications. Built for CS348 - Database Systems at Purdue University.
 
-## Table of Contents
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Database Schema](#database-schema)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Project Phases](#project-phases)
-- [Screenshots](#screenshots)
-- [Author](#author)
-- [License](#license)
-
----
 
 ## Overview
 
-The Job Application Tracker helps job seekers organize their applications, track communication with recruiters, and analyze their job search performance. This project demonstrates core database concepts including schema design, CRUD operations, complex queries, and analytics reporting.
-
-## Features
-
-### Phase 2 (Coming Soon)
+The Job Application Tracker helps users organize and track their job applications. This is Phase 1 of the project, which focuses on setting up the development environment and creating a Hello World page.
 
 
-### Phase 3 (Coming Soon)
-
-
-## Tech Stack
+## Tech Stack (Phase 1)
 
 | Component | Technology |
 |-----------|------------|
-| **Backend** | Python 3.9+ / Flask |
-| **ORM** | SQLAlchemy |
-| **Database** | SQLite (dev) → PostgreSQL on GCP Cloud SQL (prod) |
-| **Frontend** | Jinja2 / HTML5 / CSS3 |
-| **Deployment** | Google Cloud Platform (planned) |
+| Backend | Python 3.x / Flask |
+| ORM | SQLAlchemy |
+| Database | SQLite (development) |
+| Frontend | HTML5 / CSS3 |
 
-## Database Schema
 
-### Applications Table
-```sql
-CREATE TABLE applications (
-    id SERIAL PRIMARY KEY,
-    company_name VARCHAR(200) NOT NULL,
-    job_title VARCHAR(200) NOT NULL,
-    job_posting_url TEXT,
-    salary_min INTEGER,
-    salary_max INTEGER,
-    status VARCHAR(50) NOT NULL,
-    date_applied DATE NOT NULL,
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+## Current Features (Phase 1)
+
+- Flask web server configured
+- SQLAlchemy ORM integrated
+- SQLite database connected
+- Hello World landing page
+- Development environment ready
+
+
+## Project Structure
+
+cs348-job-application-db/
+├── app.py # Flask application entry point
+├── templates/
+│ └── index.html # Hello World landing page
+├── requirements.txt # Python dependencies
+├── venv/ # Virtual environment (ignored)
+└── README.md # Project documentation
+
+
+
+## Installation
+
+### Prerequisites
+- Python 3.9+
+- Git
+- Virtualenv (recommended)
+
+### Setup Instructions
+
+
+**2. Create and activate virtual environment**
+
+Windows:
+
+python -m venv venv
+venv\Scripts\activate
+
+**3. Install dependencies**
+
+pip install -r requirements.txt
+
+
+**4. Initialize database**
+
+python app.py
+
+(The database file `job_tracker.db` will be created automatically)
+
+**5. Run the application**
+
+http://localhost:5000
+
+
+
+## Screenshots
+
+### Hello World Page
+![Hello World Page](screenshots/hello-world.png)
+
+
+## Phase 1 Deliverables
+
+| Requirement | Status |
+|-------------|--------|
+| Programming language/framework installed | Complete |
+| Hello World page developed | Complete |
+| Demo video recorded (1-2 minutes) | Complete |
+| Submitted to Brightspace | Complete |
+
+
+## Demo Video Notes
+
+The Phase 1 demo video demonstrates:
+
+1. Terminal: Shows Python, Flask, and dependencies installed
+2. Browser: Shows Hello World page running at localhost:5000
+3. Code: Shows app.py and templates/index.html structure
+4. Environment: Shows virtual environment activated
+
+
+## Troubleshooting
+
+**Issue**: 'python' is not recognized
+**Solution**: Use `py` instead of `python`, or add Python to your PATH
+
+**Issue**: Port 5000 is already in use
+**Solution**: Change the port in `app.py` from 5000 to 5001
+
+**Issue**: ModuleNotFoundError: No module named 'flask'
+**Solution**: Activate your virtual environment: `venv\Scripts\activate`
+
+**Issue**: The view function for 'hello' did not return a valid response
+**Solution**: Make sure your `hello()` function has `return render_template('index.html')`
+
+**Issue**: (venv) not showing in terminal
+**Solution**: Reactivate with `venv\Scripts\activate`
+
+
+## Author
+
+Your Name
+- Purdue University, Computer Science
+- CS348 - Database Systems
+- Fall 2026
+
+
+## License
+
+This project is for educational purposes as part of CS348 at Purdue University.
+
+
+Last Updated: August 30, 2026
