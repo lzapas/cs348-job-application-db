@@ -147,12 +147,14 @@ def hello():
     These get inserted into the HTML where you see {{ variable_name }}
     """
 
-    return render_template(
-        'index.html',                      # The HTML template file
-        title="Job Application Tracker",   # Replaces {{ title }}
-        framework="Flask",                 # Replaces {{ framework }}
-        database="SQLite"                  # Replaces {{ database }}
-    )
+    return render_template('index.html')
+
+    # return render_template(
+    #     'index.html',                      # The HTML template file
+    #     title="Job Application Tracker",   # Replaces {{ title }}
+    #     framework="Flask",                 # Replaces {{ framework }}
+    #     database="SQLite"                  # Replaces {{ database }}
+    # )
 
 
 # =============================================================================
@@ -204,7 +206,7 @@ if __name__ == '__main__':
     # port=5000: Runs on port 5000
     #   - Port 5000 is the default Flask port
     #   - If 5000 is in use, you can change to 5001, 8080, etc.
-    
+
     app.run(
         debug=True,          # Enable debug mode (auto-reload, detailed errors)
         host='0.0.0.0',      # Allow connections from other devices on your network
