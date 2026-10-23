@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'New' if mode == 'new' else 'Edit' }} application &middot; Job Application Tracker{% endblock %}
+{% block container_class %}narrow{% endblock %}
+
+{% macro field_error(name) %}
+    {% if errors.get(name) %}<span class="error-text">{{ errors[name] }}</span>{% endif %}
+{% endmacro %}
+
+{% block content %}
+    <p class="kicker">Requirement 1 &middot; {{ 'Insert' if mode == 'new' else 'Update' }}</p>
+    <h1>{{ 'New application' if mode == 'new' else 'Edit application' }}</h1>
+
+    <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-grid">
+            <div class="field full {{ 'has-error' if errors.get('job_title') }}">
+                <label for="job_title">Job title</label>
+                <input id="job_title" name="job_title" maxlength="200" required
+                       value="{{ values.get('job_title', '') }}">
+                {{ field_error('job_title') }}
+            </div>
+
+            {# Options come from the companies table (lookup_options() in app.py) #}
+            <div class="field full {{ 'has-error' if errors.get('company_id') }}">
+                <label for="company_id">Company</label>
+                <select id="company_id" name="company_id" required>
+                    <option value="">Choose a company…</option>
+                    {% for c in companies %}
+                        <option value="{{ c.id }}" {{ 'selected' if values.get('company_id') == c.id|string }}>{{ c.name }}</option>
+                    {% endfor %}
+                    <option value="new" {{ 'selected' if values.get('company_id') == 'new' }}>+ Add new company…</option>
+                </select>
+                <input id="new_company_name" name="new_company_name" maxlength="200"
+                       placeholder="New company name" value="{{ values.get('new_company_name', '') }}">
+                {{ field_error('company_id') }}
+            </div>
+
+            <div class="field {{ 'has-error' if errors.get('status_id') }}">
+                <label for="status_id">Status</label>
+                <select id="status_id" name="status_id" required>
+                    <option value="">Choose…</option>
+                    {% for s in statuses %}
+                        <option value="{{ s.id }}" {{ 'selected' if values.get('status_id') == s.id|string }}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+                {{ field_error('status_id') }}
+            </div>
+
+            <div class="field {{ 'has-error' if errors.get('job_type_id') }}">
+                <label for="job_type_id">Job type</label>
+                <select id="job_type_id" name="job_type_id" required>
+                    <option value="">Choose…</option>
+                    {% for jt in job_types %}
+                        <option value="{{ jt.id }}" {{ 'selected' if values.get('job_type_id') == jt.id|string }}>{{ jt.name }}</option>
+                    {% endfor %}
+                </select>
+                {{ field_error('job_type_id') }}
+            </div>
+
+            <div class="field {{ 'has-error' if errors.get('salary') }}">
+                <label for="salary">Salary (annual USD, optional)</label>
+                <input id="salary" name="salary" type="number" min="0" step="1000"
+                       value="{{ values.get('salary', '') }}">
+                {{ field_error('salary') }}
+            </div>
+
+            <div class="field {{ 'has-error' if errors.get('date_applied') }}">
+                <label for="date_applied">Date applied</label>
+                <input id="date_applied" name="date_applied" type="date" required
+                       value="{{ values.get('date_applied', '') }}">
+                {{ field_error('date_applied') }}
+            </div>
+
+            <div class="field full">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes">{{ values.get('notes', '') }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn" type="submit">{{ 'Add application' if mode == 'new' else 'Save changes' }}</button>
+            <a class="btn secondary" href="{{ url_for('list_applications') }}">Cancel</a>
+        </div>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Only show the "new company name" box when "+ Add new company…" is selected
+    const companySelect = document.getElementById('company_id');
+    const newCompany = document.getElementById('new_company_name');
+    function syncNewCompany() {
+        const isNew = companySelect.value === 'new';
+        newCompany.hidden = !isNew;
+        newCompany.required = isNew;
+    }
+    companySelect.addEventListener('change', syncNewCompany);
+    syncNewCompany();
+</script>
+{% endblock %}
