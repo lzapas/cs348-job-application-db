@@ -1,133 +1,69 @@
 # Job Application Tracker
 
-A Flask-based web application for tracking job applications. Built for CS348 - Database Systems at Purdue University.
+A Flask web application for tracking job applications, built for CS348 (Information Systems) at Purdue University, Fall 2026.
 
-
-## Overview
-
-The Job Application Tracker helps users organize and track their job applications. This is Phase 1 of the project, which focuses on setting up the development environment and creating a Hello World page.
-
-
-## Tech Stack (Phase 1)
+## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| Backend | Python 3.x / Flask |
-| ORM | SQLAlchemy |
+| Backend | Python 3 / Flask |
+| ORM | Flask-SQLAlchemy (SQLAlchemy 2) |
 | Database | SQLite (development) |
-| Frontend | HTML5 / CSS3 |
-
-
-## Current Features (Phase 1)
-
-- Flask web server configured
-- SQLAlchemy ORM integrated
-- SQLite database connected
-- Hello World landing page
-- Development environment ready
-
+| Frontend | Jinja2 templates, HTML/CSS |
 
 ## Project Structure
 
+```
 cs348-job-application-db/
-├── app.py # Flask application entry point
+├── app.py              # Flask app, config, models, and routes
 ├── templates/
-│ └── index.html # Hello World landing page
-├── requirements.txt # Python dependencies
-├── venv/ # Virtual environment (ignored)
-└── README.md # Project documentation
+│   └── index.html      # Landing page
+├── requirements.txt    # Python dependencies
+├── .env.example        # Template for local environment variables
+└── README.md
+```
 
+`venv/`, `.env`, and `instance/` (where the SQLite file lives) are local-only and ignored by git.
 
+## Setup
 
-## Installation
+Requires Python 3.9+.
 
-### Prerequisites
-- Python 3.9+
-- Git
-- Virtualenv (recommended)
-
-### Setup Instructions
-
-
-**2. Create and activate virtual environment**
-
-Windows:
+```powershell
+git clone https://github.com/lzapas/cs348-job-application-db.git
+cd cs348-job-application-db
 
 python -m venv venv
-venv\Scripts\activate
-
-**3. Install dependencies**
+venv\Scripts\activate          # macOS/Linux: source venv/bin/activate
 
 pip install -r requirements.txt
+copy .env.example .env         # macOS/Linux: cp .env.example .env
+```
 
+Set `SECRET_KEY` in `.env` to a random value, e.g. the output of `python -c "import secrets; print(secrets.token_hex(32))"`.
 
-**4. Initialize database**
+## Running
 
+```powershell
 python app.py
+```
 
-(The database file `job_tracker.db` will be created automatically)
+Then open http://localhost:5000. On first run, `db.create_all()` creates `instance/job_tracker.db`.
 
-**5. Run the application**
+## Project Stages
 
-http://localhost:5000
-
-
-
-## Screenshots
-
-### Hello World Page
-![Hello World Page](screenshots/hello-world.png)
-
-
-## Phase 1 Deliverables
-
-| Requirement | Status |
-|-------------|--------|
-| Programming language/framework installed | Complete |
-| Hello World page developed | Complete |
-| Demo video recorded (1-2 minutes) | Complete |
-| Submitted to Brightspace | Complete |
-
-
-## Demo Video Notes
-
-The Phase 1 demo video demonstrates:
-
-1. Terminal: Shows Python, Flask, and dependencies installed
-2. Browser: Shows Hello World page running at localhost:5000
-3. Code: Shows app.py and templates/index.html structure
-4. Environment: Shows virtual environment activated
-
+| Stage | Scope | Status |
+|-------|-------|--------|
+| 1 | Stack installed, Hello World page, demo video | Complete |
+| 2 | Add/edit/delete interface and filtered report | Not started |
+| 3 | TBD | Not started |
 
 ## Troubleshooting
 
-**Issue**: 'python' is not recognized
-**Solution**: Use `py` instead of `python`, or add Python to your PATH
-
-**Issue**: Port 5000 is already in use
-**Solution**: Change the port in `app.py` from 5000 to 5001
-
-**Issue**: ModuleNotFoundError: No module named 'flask'
-**Solution**: Activate your virtual environment: `venv\Scripts\activate`
-
-**Issue**: The view function for 'hello' did not return a valid response
-**Solution**: Make sure your `hello()` function has `return render_template('index.html')`
-
-**Issue**: (venv) not showing in terminal
-**Solution**: Reactivate with `venv\Scripts\activate`
-
+- **`python` is not recognized**: use `py` instead, or add Python to your PATH.
+- **Port 5000 is in use**: change the port in the `app.run(...)` call in `app.py`.
+- **`ModuleNotFoundError: No module named 'flask'`**: activate the virtual environment first (`venv\Scripts\activate`).
 
 ## Author
 
-Your Name
-- Purdue University, Computer Science
-- CS348 - Database Systems
-- Fall 2026
-
-
-## License
-
-This project is for educational purposes as part of CS348 at Purdue University.
-
-
-Last Updated: August 30, 2026
+Lukas Zapasnikas, Purdue University Computer Science
