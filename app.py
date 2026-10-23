@@ -1,9 +1,9 @@
 import os
-from datetime import datetime
 
 from dotenv import load_dotenv
 from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy
+
+from models import db
 
 load_dotenv()
 
@@ -15,16 +15,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-only-change-me')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///job_tracker.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
-
-
-class Application(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    company_name = db.Column(db.String(200), nullable=False)
-    job_title = db.Column(db.String(200), nullable=False)
-    status = db.Column(db.String(50), nullable=False, default='Applied')
-    date_applied = db.Column(db.DateTime, default=datetime.now)
-    created_at = db.Column(db.DateTime, default=datetime.now)
+db.init_app(app)
 
 
 @app.route('/')
