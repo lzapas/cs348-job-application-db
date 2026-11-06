@@ -7,7 +7,7 @@ venv/
 # Local config and secrets
 .env
 
-# Local database (recreated by db.create_all())
+# Local database (recreated by python init_db.py)
 instance/
 *.db
 

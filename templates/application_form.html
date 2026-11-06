@@ -1,19 +1,22 @@
 {% extends 'base.html' %}
 
-{# A dropdown whose options come from a database table (see dropdown_options() in app.py) #}
+{# A dropdown whose options come from a lookup table (see dropdown_options() in app.py).
+   The option the user picked before is marked "selected". #}
 {% macro select(name, label, options) %}
     <label>{{ label }}
         <select name="{{ name }}" required>
             <option value="">Choose…</option>
             {% for o in options %}
-                <option value="{{ o.id }}" {{ 'selected' if values.get(name)|string == o.id|string }}>{{ o.name }}</option>
+                <option value="{{ o['id'] }}" {{ 'selected' if values.get(name)|string == o['id']|string }}>{{ o['name'] }}</option>
             {% endfor %}
         </select>
     </label>
 {% endmacro %}
 
 {% block content %}
-    <h1>{{ 'Edit' if application else 'New' }} application</h1>
+    <h1>{{ 'Edit' if editing else 'New' }} application</h1>
+
+    {% if error %}<div class="flash error">{{ error }}</div>{% endif %}
 
     <form method="post" class="stacked">
         <label>Job title
