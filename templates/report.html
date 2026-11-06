@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% macro money(v) %}{{ '${:,.0f}'.format(v) if v is not none else '—' }}{% endmacro %}
+
+{# A filter dropdown whose options come from a database table (see dropdown_options() in app.py) #}
+{% macro select(name, label, options) %}
+    <label>{{ label }}
+        <select name="{{ name }}">
+            <option value="">Any</option>
+            {% for o in options %}
+                <option value="{{ o.id }}" {{ 'selected' if args.get(name) == o.id|string }}>{{ o.name }}</option>
+            {% endfor %}
+        </select>
+    </label>
+{% endmacro %}
+
+{% block content %}
+    <h1>Application report</h1>
+
+    <form method="get" class="filters">
+        <label>Applied from <input name="date_from" type="date" value="{{ args.get('date_from', '') }}"></label>
+        <label>to <input name="date_to" type="date" value="{{ args.get('date_to', '') }}"></label>
+        <label>Salary from <input name="salary_min" type="number" min="0" value="{{ args.get('salary_min', '') }}"></label>
+        <label>to <input name="salary_max" type="number" min="0" value="{{ args.get('salary_max', '') }}"></label>
+        {{ select('company_id', 'Company', companies) }}
+        {{ select('status_id', 'Status', statuses) }}
+        {{ select('job_type_id', 'Job type', job_types) }}
+        <button class="btn">Run report</button>
+        <a href="{{ url_for('report') }}">Clear</a>
+    </form>
+
+    <h2>Summary</h2>
+    <ul>
+        <li>Applications: <b>{{ stats.total }}</b></li>
+        <li>Average salary: <b>{{ money(stats.avg_salary) }}</b></li>
+        <li>Salary range: <b>{{ money(stats.min_salary) }} – {{ money(stats.max_salary) }}</b></li>
+        <li>Heard back: <b>{{ '%.0f%%'|format(100 * stats.heard_back / stats.total) if stats.total else '—' }}</b></li>
+    </ul>
+
+    <h2>Matching applications</h2>
+    <table>
+        <tr><th>Applied</th><th>Company</th><th>Job title</th><th>Type</th><th>Status</th><th>Salary</th></tr>
+        {% for r in rows %}
+            <tr>
+                <td>{{ r.date_applied }}</td>
+                <td>{{ r.company }}</td>
+                <td>{{ r.job_title }}</td>
+                <td>{{ r.job_type }}</td>
+                <td>{{ r.status }}</td>
+                <td>{{ money(r.salary) }}</td>
+            </tr>
+        {% else %}
+            <tr><td colspan="6">No applications match these filters.</td></tr>
+        {% endfor %}
+    </table>
+{% endblock %}

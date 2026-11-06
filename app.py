@@ -1,183 +1,154 @@
 import os
 from datetime import date
 
-from dotenv import load_dotenv
 from flask import Flask, abort, flash, redirect, render_template, request, url_for
-from flask_wtf.csrf import CSRFProtect
+from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
 
 from models import Application, Company, JobType, Status, db
 
-load_dotenv()
-
 app = Flask(__name__)
-
-# Secrets come from .env (see .env.example); the fallback is for local dev only
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-only-change-me')
-# Relative SQLite paths resolve to the instance/ folder in Flask-SQLAlchemy 3
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-only-change-me')  # needed for flash()
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///job_tracker.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 db.init_app(app)
-# Every POST form must include csrf_token(), so other sites can't submit forms as the user
-csrf = CSRFProtect(app)
-
-NEW_COMPANY = 'new'  # value of the "+ Add new company" option in the company dropdown
 
 
-def lookup_options():
-    """Rows that populate the form dropdowns. Queried on every request, never hardcoded."""
+def dropdown_options():
+    """Rows for the dropdowns, queried from the database on every request (never hardcoded)."""
     return {
         'companies': Company.query.order_by(Company.name).all(),
-        'statuses': Status.query.order_by(Status.sort_order).all(),
+        'statuses': Status.query.order_by(Status.id).all(),
         'job_types': JobType.query.order_by(JobType.name).all(),
     }
 
 
-def parse_application_form(form):
-    """Validate the submitted form. Returns (values, errors)."""
-    errors = {}
-    values = {
-        'job_title': form.get('job_title', '').strip(),
-        'company_id': form.get('company_id', ''),
-        'new_company_name': form.get('new_company_name', '').strip(),
-        'status_id': form.get('status_id', ''),
-        'job_type_id': form.get('job_type_id', ''),
-        'salary': form.get('salary', '').strip(),
-        'date_applied': form.get('date_applied', '').strip(),
-        'notes': form.get('notes', '').strip(),
-    }
-
-    if not values['job_title']:
-        errors['job_title'] = 'Job title is required.'
-    elif len(values['job_title']) > 200:
-        errors['job_title'] = 'Job title must be 200 characters or fewer.'
-
-    if values['company_id'] == NEW_COMPANY:
-        if not values['new_company_name']:
-            errors['company_id'] = 'Enter a name for the new company.'
-    elif not values['company_id'].isdigit() or not db.session.get(Company, int(values['company_id'])):
-        errors['company_id'] = 'Choose a company.'
-
-    # The dropdowns only offer valid ids, but the request could be forged, so check the DB
-    if not values['status_id'].isdigit() or not db.session.get(Status, int(values['status_id'])):
-        errors['status_id'] = 'Choose a status.'
-    if not values['job_type_id'].isdigit() or not db.session.get(JobType, int(values['job_type_id'])):
-        errors['job_type_id'] = 'Choose a job type.'
-
-    if values['salary'] and (not values['salary'].isdigit() or int(values['salary']) > 10_000_000):
-        errors['salary'] = 'Salary must be a whole number between 0 and 10,000,000.'
-
+def save_from_form(application):
+    """Copy the submitted form onto `application` and commit. Returns True on success."""
+    form = request.form
     try:
-        date.fromisoformat(values['date_applied'])
-    except ValueError:
-        errors['date_applied'] = 'Enter a valid date.'
-
-    return values, errors
-
-
-def apply_form_to(application, values):
-    """Copy validated form values onto an Application (new or existing)."""
-    if values['company_id'] == NEW_COMPANY:
-        name = values['new_company_name']
-        # Reuse an existing company if the name matches, instead of failing on UNIQUE(name)
-        company = Company.query.filter(db.func.lower(Company.name) == name.lower()).first()
-        if company is None:
-            company = Company(name=name)
-            db.session.add(company)  # inserted in the same transaction as the application
-        application.company = company
-    else:
-        application.company_id = int(values['company_id'])
-
-    application.job_title = values['job_title']
-    application.status_id = int(values['status_id'])
-    application.job_type_id = int(values['job_type_id'])
-    application.salary = int(values['salary']) if values['salary'] else None
-    application.date_applied = date.fromisoformat(values['date_applied'])
-    application.notes = values['notes'] or None
-
-
-def save_application(application, values, success_message):
-    """Insert/update in one transaction. Returns True on success."""
-    try:
-        apply_form_to(application, values)
+        application.job_title = form['job_title'].strip()
+        application.company_id = int(form['company_id'])
+        application.status_id = int(form['status_id'])
+        application.job_type_id = int(form['job_type_id'])
+        application.salary = int(form['salary']) if form['salary'] else None
+        application.date_applied = date.fromisoformat(form['date_applied'])
+        application.notes = form['notes'].strip() or None
+        if not application.job_title:
+            raise ValueError
         db.session.add(application)
         db.session.commit()
-    except IntegrityError:
+        return True
+    except (ValueError, IntegrityError):
+        # ValueError: a field is missing or malformed.
+        # IntegrityError: the database rejected it (bad foreign key, negative salary, ...).
         db.session.rollback()
-        flash('Could not save the application: it conflicts with existing data.', 'error')
+        flash('Please fill in every required field with a valid value.', 'error')
         return False
-    flash(success_message, 'success')
-    return True
 
 
 @app.route('/')
-def hello():
-    return render_template('index.html')
+def index():
+    return redirect(url_for('list_applications'))
 
+
+# ---------- Requirement 1: insert / update / delete applications ----------
 
 @app.route('/applications')
 def list_applications():
-    # joinedload fetches company/status/job type in the same query instead of one query per row
-    applications = (Application.query
-                    .options(joinedload(Application.company),
-                             joinedload(Application.status),
-                             joinedload(Application.job_type))
-                    .order_by(Application.date_applied.desc(), Application.id.desc())
-                    .all())
+    applications = Application.query.order_by(Application.date_applied.desc()).all()
     return render_template('applications.html', applications=applications)
 
 
 @app.route('/applications/new', methods=['GET', 'POST'])
 def new_application():
-    if request.method == 'POST':
-        values, errors = parse_application_form(request.form)
-        if not errors and save_application(Application(), values, 'Application added.'):
-            return redirect(url_for('list_applications'))
-    else:
-        values, errors = {'date_applied': date.today().isoformat()}, {}
-
-    return render_template('application_form.html', mode='new', values=values,
-                           errors=errors, **lookup_options())
+    if request.method == 'POST' and save_from_form(Application()):
+        flash('Application added.', 'success')
+        return redirect(url_for('list_applications'))
+    values = request.form or {'date_applied': date.today().isoformat()}
+    return render_template('application_form.html', values=values, **dropdown_options())
 
 
 @app.route('/applications/<int:app_id>/edit', methods=['GET', 'POST'])
 def edit_application(app_id):
     application = db.session.get(Application, app_id) or abort(404)
-
-    if request.method == 'POST':
-        values, errors = parse_application_form(request.form)
-        if not errors and save_application(application, values, 'Application updated.'):
-            return redirect(url_for('list_applications'))
-    else:
-        values = {
-            'job_title': application.job_title,
-            'company_id': str(application.company_id),
-            'status_id': str(application.status_id),
-            'job_type_id': str(application.job_type_id),
-            'salary': '' if application.salary is None else str(application.salary),
-            'date_applied': application.date_applied.isoformat(),
-            'notes': application.notes or '',
-        }
-        errors = {}
-
-    return render_template('application_form.html', mode='edit', application=application,
-                           values=values, errors=errors, **lookup_options())
+    if request.method == 'POST' and save_from_form(application):
+        flash('Application updated.', 'success')
+        return redirect(url_for('list_applications'))
+    values = request.form or {
+        'job_title': application.job_title,
+        'company_id': application.company_id,
+        'status_id': application.status_id,
+        'job_type_id': application.job_type_id,
+        'salary': application.salary or '',
+        'date_applied': application.date_applied.isoformat(),
+        'notes': application.notes or '',
+    }
+    return render_template('application_form.html', values=values, application=application,
+                           **dropdown_options())
 
 
 @app.route('/applications/<int:app_id>/delete', methods=['POST'])
 def delete_application(app_id):
     application = db.session.get(Application, app_id) or abort(404)
-    label = f'{application.job_title} at {application.company.name}'
-    db.session.delete(application)  # interviews go too, via ON DELETE CASCADE
+    db.session.delete(application)
     db.session.commit()
-    flash(f'Deleted "{label}".', 'success')
+    flash('Application deleted.', 'success')
     return redirect(url_for('list_applications'))
+
+
+# ---------- Requirement 2: filtered report ----------
+
+# Each report filter: query-string name -> SQL condition. The SQL text is fixed here;
+# the user's value is only ever sent as a bound parameter (:name), never pasted into the SQL.
+REPORT_FILTERS = {
+    'date_from':   'a.date_applied >= :date_from',
+    'date_to':     'a.date_applied <= :date_to',
+    'salary_min':  'a.salary >= :salary_min',
+    'salary_max':  'a.salary <= :salary_max',
+    'company_id':  'a.company_id = :company_id',
+    'status_id':   'a.status_id = :status_id',
+    'job_type_id': 'a.job_type_id = :job_type_id',
+}
+
+
+@app.route('/report')
+def report():
+    conditions, params = [], {}
+    for name, condition in REPORT_FILTERS.items():
+        value = request.args.get(name, '').strip()
+        if value:
+            conditions.append(condition)
+            params[name] = value
+    where = ('WHERE ' + ' AND '.join(conditions)) if conditions else ''
+
+    rows = db.session.execute(text(f"""
+        SELECT a.date_applied, a.job_title, a.salary,
+               c.name AS company, s.name AS status, jt.name AS job_type
+        FROM applications a
+        JOIN companies c  ON c.id  = a.company_id
+        JOIN statuses s   ON s.id  = a.status_id
+        JOIN job_types jt ON jt.id = a.job_type_id
+        {where}
+        ORDER BY a.date_applied DESC
+    """), params).mappings().all()
+
+    stats = db.session.execute(text(f"""
+        SELECT COUNT(*)      AS total,
+               AVG(a.salary) AS avg_salary,
+               MIN(a.salary) AS min_salary,
+               MAX(a.salary) AS max_salary,
+               -- "heard back" = the company moved it past Applied (Withdrawn was my choice)
+               SUM(CASE WHEN s.name NOT IN ('Applied', 'Withdrawn') THEN 1 ELSE 0 END) AS heard_back
+        FROM applications a
+        JOIN statuses s ON s.id = a.status_id
+        {where}
+    """), params).mappings().one()
+
+    return render_template('report.html', rows=rows, stats=stats, args=request.args,
+                           **dropdown_options())
 
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)

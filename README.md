@@ -8,22 +8,21 @@ A Flask web application for tracking job applications, built for CS348 (Informat
 |-----------|------------|
 | Backend | Python 3 / Flask |
 | ORM | Flask-SQLAlchemy (SQLAlchemy 2) |
-| Database | SQLite (development) |
+| Database | SQLite |
 | Frontend | Jinja2 templates, HTML/CSS |
 
 ## Project Structure
 
 ```
 cs348-job-application-db/
-├── app.py              # Flask app, config, models, and routes
-├── templates/
-│   └── index.html      # Landing page
-├── requirements.txt    # Python dependencies
-├── .env.example        # Template for local environment variables
-└── README.md
+├── app.py                 # Routes: add/edit/delete (Req 1) and the report (Req 2)
+├── models.py              # Database tables
+├── seed.py                # Resets the database and loads demo data
+├── docs/schema.md         # Database design
+├── templates/             # HTML pages (Jinja2)
+├── static/style.css
+└── requirements.txt
 ```
-
-`venv/`, `.env`, and `instance/` (where the SQLite file lives) are local-only and ignored by git.
 
 ## Setup
 
@@ -37,10 +36,8 @@ python -m venv venv
 venv\Scripts\activate          # macOS/Linux: source venv/bin/activate
 
 pip install -r requirements.txt
-copy .env.example .env         # macOS/Linux: cp .env.example .env
+python seed.py                 # creates instance/job_tracker.db with demo data
 ```
-
-Set `SECRET_KEY` in `.env` to a random value, e.g. the output of `python -c "import secrets; print(secrets.token_hex(32))"`.
 
 ## Running
 
@@ -48,21 +45,22 @@ Set `SECRET_KEY` in `.env` to a random value, e.g. the output of `python -c "imp
 python app.py
 ```
 
-Then open http://localhost:5000. On first run, `db.create_all()` creates `instance/job_tracker.db`.
+Then open http://localhost:5000.
+
+Optional environment variables: `SECRET_KEY` (signs flash messages) and `DATABASE_URL` (defaults to `sqlite:///job_tracker.db`).
+
+## Features
+
+- **Applications** (`/applications`): add, edit and delete applications. The company, status and job type dropdowns are filled from the database.
+- **Report** (`/report`): filter by date range, salary range, company, status and job type. It shows the matching applications plus a count, average/min/max salary, and the share that heard back. The SQL uses bound parameters for every user-supplied value.
 
 ## Project Stages
 
 | Stage | Scope | Status |
 |-------|-------|--------|
 | 1 | Stack installed, Hello World page, demo video | Complete |
-| 2 | Add/edit/delete interface and filtered report | Not started |
-| 3 | TBD | Not started |
-
-## Troubleshooting
-
-- **`python` is not recognized**: use `py` instead, or add Python to your PATH.
-- **Port 5000 is in use**: change the port in the `app.run(...)` call in `app.py`.
-- **`ModuleNotFoundError: No module named 'flask'`**: activate the virtual environment first (`venv\Scripts\activate`).
+| 2 | Add/edit/delete interface and filtered report | Complete |
+| 3 | SQL injection, indexes, transactions, AI usage | Not started |
 
 ## Author
 
