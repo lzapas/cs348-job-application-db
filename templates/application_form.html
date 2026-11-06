@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{# A dropdown whose options come from a lookup table (see dropdown_options() in app.py).
+   The option the user picked before is marked "selected". #}
+{% macro select(name, label, options) %}
+    <label>{{ label }}
+        <select name="{{ name }}" required>
+            <option value="">Choose…</option>
+            {% for o in options %}
+                <option value="{{ o['id'] }}" {{ 'selected' if values.get(name)|string == o['id']|string }}>{{ o['name'] }}</option>
+            {% endfor %}
+        </select>
+    </label>
+{% endmacro %}
+
+{% block content %}
+    <h1>{{ 'Edit' if editing else 'New' }} application</h1>
+
+    {% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+
+    <form method="post" class="stacked">
+        <label>Job title
+            <input name="job_title" maxlength="200" required value="{{ values.get('job_title', '') }}">
+        </label>
+        {{ select('company_id', 'Company', companies) }}
+        {{ select('status_id', 'Status', statuses) }}
+        {{ select('job_type_id', 'Job type', job_types) }}
+        <label>Salary (annual USD, optional)
+            <input name="salary" type="number" min="0" value="{{ values.get('salary', '') }}">
+        </label>
+        <label>Date applied
+            <input name="date_applied" type="date" required value="{{ values.get('date_applied', '') }}">
+        </label>
+        <label>Notes
+            <textarea name="notes">{{ values.get('notes', '') }}</textarea>
+        </label>
+        <p>
+            <button class="btn">Save</button>
+            <a href="{{ url_for('list_applications') }}">Cancel</a>
+        </p>
+    </form>
+{% endblock %}
